@@ -224,6 +224,8 @@ public class LoadAddressActivity extends Activity {
 		SharedPreferencesUtil.saveStringData(this, "city", selectedCity.name);
 		if (!isCity) {
 			SharedPreferencesUtil.saveStringData(this, "county", selectedCounty.name);
+		}else {
+			SharedPreferencesUtil.saveStringData(this, "county", selectedCity.name);
 		}
 		//Toast.makeText(getApplicationContext(), "当前位置:"+selectedProvince.name+selectedCity.name+selectedCounty.name+"保存成功", Toast.LENGTH_SHORT).show();
 		Intent intent=new Intent(this,WeatherActivity.class);

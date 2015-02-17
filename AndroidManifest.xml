@@ -11,11 +11,11 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/logo"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.mrwang.coolweather.activity.LoadAddressActivity"
+            android:name="com.mrwang.coolweather.activity.WeatherActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,7 +23,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.mrwang.coolweather.activity.WeatherActivity"></activity>
+        <activity android:name="com.mrwang.coolweather.activity.LoadAddressActivity"/>
+        <service android:name="com.mrwang.coolweather.service.AutoUpdateService"/>
+        <receiver android:name="com.mrwang.coolweather.receiver.AutoUpdateReceiver"/>
     </application>
 
 </manifest>

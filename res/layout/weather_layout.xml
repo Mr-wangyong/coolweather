@@ -17,21 +17,21 @@
             android:textSize="24sp" />
 
         <Button
-            android:id="@+id/switchCity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentLeft="true"
-            android:text="切换城市" />
+            android:id="@+id/switch_city"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/home" />
 
         <Button
-            android:id="@+id/refreshWeather"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
+            android:id="@+id/refresh_weather"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_alignParentRight="true"
-            android:text="更新" />
-
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/refresh" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -70,9 +70,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:gravity="center"
+                android:gravity="center_vertical"
+                android:text="天气状况"
                 android:textColor="#FFF"
-                android:text="tianqi"
                 android:textSize="20sp" />
 
             <LinearLayout
@@ -104,8 +104,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:textColor="#FFF"
                     android:text="sssss"
+                    android:textColor="#FFF"
                     android:textSize="20sp" />
             </LinearLayout>
         </LinearLayout>

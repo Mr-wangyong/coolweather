@@ -3,16 +3,6 @@ package com.mrwang.coolweather.activity;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
-import org.apache.http.client.utils.URLEncodedUtils;
-
-import com.google.gson.Gson;
-import com.mrwang.coolweather.R;
-import com.mrwang.coolweather.bean.Weather;
-import com.mrwang.coolweather.util.HttpCallBackListener;
-import com.mrwang.coolweather.util.HttpUtil;
-import com.mrwang.coolweather.util.SharedPreferencesUtil;
-import com.mrwang.coolweather.util.URLBase;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -23,6 +13,15 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.google.gson.Gson;
+import com.mrwang.coolweather.R;
+import com.mrwang.coolweather.bean.Weather;
+import com.mrwang.coolweather.service.AutoUpdateService;
+import com.mrwang.coolweather.util.HttpCallBackListener;
+import com.mrwang.coolweather.util.HttpUtil;
+import com.mrwang.coolweather.util.SharedPreferencesUtil;
+import com.mrwang.coolweather.util.URLBase;
 
 public class WeatherActivity extends Activity implements OnClickListener {
 	private LinearLayout weatherInfoLayout;
@@ -80,8 +79,8 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		temp1Text = (TextView) findViewById(R.id.temp1);
 		temp2Text = (TextView) findViewById(R.id.temp2);
 		currentDateText = (TextView) findViewById(R.id.current_date);
-		switchCity = (Button) findViewById(R.id.switchCity);
-		refreshWeather = (Button) findViewById(R.id.refreshWeather);
+		switchCity = (Button) findViewById(R.id.switch_city);
+		refreshWeather = (Button) findViewById(R.id.refresh_weather);
 		switchCity.setOnClickListener(this);
 		refreshWeather.setOnClickListener(this);
 	}
@@ -102,13 +101,13 @@ public class WeatherActivity extends Activity implements OnClickListener {
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
-		case R.id.switchCity:
+		case R.id.switch_city:
 			Intent intent = new Intent(this, LoadAddressActivity.class);
 			intent.putExtra("from_weather_activity", true);
 			startActivity(intent);
 			finish();
 			break;
-		case R.id.refreshWeather:
+		case R.id.refresh_weather:
 			publishText.setText("同步中");
 			county = SharedPreferencesUtil.getStringData(this,
 					"county", "");
@@ -168,10 +167,12 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		temp1Text.setText(SharedPreferencesUtil.getStringData(this,"temp1", ""));
 		temp2Text.setText(SharedPreferencesUtil.getStringData(this,"temp2", ""));
 		weatherDespText.setText(SharedPreferencesUtil.getStringData(this,"weather_desp", ""));
-		publishText.setText("今天" + SharedPreferencesUtil.getStringData(this,"publish_time", "") + "发布");
+		publishText.setText(SharedPreferencesUtil.getStringData(this,"publish_time", ""));
 		currentDateText.setText(SharedPreferencesUtil.getStringData(this,"current_date", ""));
 		weatherInfoLayout.setVisibility(View.VISIBLE);
 		cityNameText.setVisibility(View.VISIBLE);
+		Intent intent = new Intent(this, AutoUpdateService.class);
+		startService(intent);
 	}
 
 }

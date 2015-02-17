@@ -17,6 +17,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.mrwang.coolweather.R;
@@ -24,6 +25,7 @@ import com.mrwang.coolweather.bean.Address;
 import com.mrwang.coolweather.bean.Address.City;
 import com.mrwang.coolweather.bean.Address.County;
 import com.mrwang.coolweather.bean.Address.Province;
+import com.mrwang.coolweather.util.SharedPreferencesUtil;
 import com.mrwang.coolweather.util.StreamUtils;
 
 /**
@@ -44,6 +46,7 @@ public class LoadAddressActivity extends Activity {
 	private ArrayAdapter<String> adapter;
 	private List<String> dataList1 = new ArrayList<String>();
 	private List<String> dataList2 = new ArrayList<String>();
+	private List<String> dataList3 = new ArrayList<String>();
 	/**
 	 * 省列表
 	 */
@@ -65,6 +68,10 @@ public class LoadAddressActivity extends Activity {
 	 */
 	private City selectedCity;
 	/**
+	 * 选中的城市
+	 */
+	private County selectedCounty;
+	/**
 	 * 当前选中的级别
 	 */
 	private int currentLevel;
@@ -81,7 +88,7 @@ public class LoadAddressActivity extends Activity {
 				queryCounties();
 				break;
 			}
-			
+
 		};
 	};
 
@@ -100,7 +107,7 @@ public class LoadAddressActivity extends Activity {
 	}
 
 	private void initData() {
-		
+
 		try {
 			InputStream is = getAssets().open("address.json");
 			String json = StreamUtils.readStream(is);
@@ -119,19 +126,22 @@ public class LoadAddressActivity extends Activity {
 					int position, long id) {
 				Message msg = Message.obtain();
 				if (currentLevel == LEVEL_PROVINCE) {
-					provinceIndex = address.arealist.get(position).type;
+					// 这里type 0表示直辖市 只有两级 1代表省区 有三级
+					provinceIndex = position;
 					selectedProvince = address.arealist.get(position);
 					msg.what = QUERYCITIES;
 					handler.sendMessage(msg);
 				} else if (currentLevel == LEVEL_CITY) {
-					cityIndex = address.arealist.get(provinceIndex).sub
-							.get(position).type;
+					cityIndex = position;
 					selectedCity = address.arealist.get(provinceIndex).sub
 							.get(position);
 					msg.what = QUERYCOUNTIES;
 					handler.sendMessage(msg);
 				} else if (currentLevel == LEVEL_COUNTY) {
-					countyIndex = position;
+					countyIndex=position;
+					selectedCounty = address.arealist.get(provinceIndex).sub
+							.get(cityIndex).sub.get(position);
+					saveAddress(false);
 				}
 			}
 		});
@@ -143,21 +153,19 @@ public class LoadAddressActivity extends Activity {
 	 * 查询全国所有的省
 	 */
 	private void queryProvinces() {
-		dataList1.clear();
+		dataList3.clear();
 		// 说明是省级
 		for (Province province : address.arealist) {
-			dataList1.add(province.name);
+			dataList3.add(province.name);
 		}
 		listView.setSelection(0);
 		titleText.setText("中国");
+		adapter = new ArrayAdapter<String>(LoadAddressActivity.this,
+				android.R.layout.simple_list_item_1, dataList3);
+		listView.setAdapter(adapter);
 		currentLevel = LEVEL_PROVINCE;
-		if (adapter == null) {
-			adapter = new ArrayAdapter<String>(LoadAddressActivity.this,
-					android.R.layout.simple_list_item_1, dataList1);
-			listView.setAdapter(adapter);
-		} else {
-			adapter.notifyDataSetChanged();
-		}
+		dataList1.clear();
+		dataList2.clear();
 	}
 
 	/**
@@ -166,18 +174,20 @@ public class LoadAddressActivity extends Activity {
 	protected void queryCities() {
 		System.out.println("线程名称" + Thread.currentThread().getName());
 		dataList2.clear();
-		if (provinceIndex != 0) {
-			for (City city : address.arealist.get(provinceIndex).sub) {
-				System.out.println("city.name");
-				dataList2.add(0,city.name);
-			}
-			adapter = new ArrayAdapter<String>(LoadAddressActivity.this,
-					android.R.layout.simple_list_item_1, dataList2);
-			listView.setAdapter(adapter);
-			listView.setSelection(0);
-			titleText.setText(selectedProvince.name);
-			currentLevel = LEVEL_CITY;
+		System.out.println("address.arealist.get(provinceIndex).sub=="
+				+ address.arealist.get(provinceIndex).sub.size());
+		for (City city : address.arealist.get(provinceIndex).sub) {
+			System.out.println("city.name" + city.name);
+			dataList2.add(city.name);
 		}
+		adapter = new ArrayAdapter<String>(LoadAddressActivity.this,
+				android.R.layout.simple_list_item_1, dataList2);
+		listView.setAdapter(adapter);
+		listView.setSelection(0);
+		titleText.setText(selectedProvince.name);
+		dataList1.clear();
+		dataList3.clear();
+		currentLevel = LEVEL_CITY;
 
 	}
 
@@ -186,7 +196,8 @@ public class LoadAddressActivity extends Activity {
 	 */
 	protected void queryCounties() {
 		dataList1.clear();
-		if (provinceIndex != 0) {
+		if (address.arealist.get(provinceIndex).type != 0) {
+			// 说明不是直辖市
 			for (County county : address.arealist.get(provinceIndex).sub
 					.get(cityIndex).sub) {
 				dataList1.add(county.name);
@@ -194,12 +205,43 @@ public class LoadAddressActivity extends Activity {
 			adapter = new ArrayAdapter<String>(LoadAddressActivity.this,
 					android.R.layout.simple_list_item_1, dataList1);
 			listView.setAdapter(adapter);
+			dataList2.clear();
 			listView.setSelection(0);
 			titleText.setText(selectedCity.name);
-			currentLevel = LEVEL_CITY;
+			dataList2.clear();
+			dataList3.clear();
+			currentLevel = LEVEL_COUNTY;
+		}else {
+			//说明是直辖市 应该立即保存当前地址
+			saveAddress(true);
 		}
 	}
-
+	/**
+	 * 保存信息
+	 * @param isCity 是否是直辖市
+	 */
+	private void saveAddress(boolean isCity) {
+		SharedPreferencesUtil.saveStringData(this, "province", selectedProvince.name);
+		SharedPreferencesUtil.saveStringData(this, "city", selectedCity.name);
+		if (!isCity) {
+			SharedPreferencesUtil.saveStringData(this, "county", selectedCounty.name);
+		}
+		Toast.makeText(getApplicationContext(), "当前位置:"+selectedProvince.name+selectedCity.name+selectedCounty.name+"保存成功", Toast.LENGTH_SHORT).show();
+	}
+	
+	/**
+	 * 显示进度条
+	 */
+	private void showProgressDialog() {
+		if (progressDialog == null) {
+			progressDialog = new ProgressDialog(this);
+			progressDialog.setMessage("正在加载中");
+			// 点击外部不会取消该对话框
+			progressDialog.setCanceledOnTouchOutside(false);
+		}
+		progressDialog.show();
+	}
+	
 	/**
 	 * 关闭进度对话框
 	 */
@@ -209,15 +251,15 @@ public class LoadAddressActivity extends Activity {
 		}
 	}
 
-	/*@Override
+	@Override
 	public void onBackPressed() {
-		if (currentLevel == LEVEL_PROVINCE) {
-			queryProvinces();
-		} else if (currentLevel == LEVEL_CITY) {
+		if (currentLevel == LEVEL_COUNTY) {
 			queryCities();
+		} else if (currentLevel == LEVEL_CITY) {
+			queryProvinces();
 		} else {
 			finish();
 		}
-	}*/
+	}
 
 }

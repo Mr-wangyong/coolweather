@@ -7,6 +7,7 @@ import java.util.List;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -174,10 +175,8 @@ public class LoadAddressActivity extends Activity {
 	protected void queryCities() {
 		System.out.println("线程名称" + Thread.currentThread().getName());
 		dataList2.clear();
-		System.out.println("address.arealist.get(provinceIndex).sub=="
-				+ address.arealist.get(provinceIndex).sub.size());
 		for (City city : address.arealist.get(provinceIndex).sub) {
-			System.out.println("city.name" + city.name);
+			//System.out.println("city.name" + city.name);
 			dataList2.add(city.name);
 		}
 		adapter = new ArrayAdapter<String>(LoadAddressActivity.this,
@@ -226,7 +225,16 @@ public class LoadAddressActivity extends Activity {
 		if (!isCity) {
 			SharedPreferencesUtil.saveStringData(this, "county", selectedCounty.name);
 		}
-		Toast.makeText(getApplicationContext(), "当前位置:"+selectedProvince.name+selectedCity.name+selectedCounty.name+"保存成功", Toast.LENGTH_SHORT).show();
+		//Toast.makeText(getApplicationContext(), "当前位置:"+selectedProvince.name+selectedCity.name+selectedCounty.name+"保存成功", Toast.LENGTH_SHORT).show();
+		Intent intent=new Intent(this,WeatherActivity.class);
+		if (isCity) {
+			intent.putExtra("county", selectedCity.name);
+		}else {
+			intent.putExtra("county", selectedCounty.name);
+		}
+		
+		startActivity(intent);
+		finish();
 	}
 	
 	/**

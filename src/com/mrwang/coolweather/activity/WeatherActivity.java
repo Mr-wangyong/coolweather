@@ -10,8 +10,12 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
@@ -25,6 +29,7 @@ import com.mrwang.coolweather.util.URLBase;
 
 public class WeatherActivity extends Activity implements OnClickListener {
 	private LinearLayout weatherInfoLayout;
+	private int current;
 
 	/**
 	 * 用于显示城市名
@@ -81,6 +86,7 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		currentDateText = (TextView) findViewById(R.id.current_date);
 		switchCity = (Button) findViewById(R.id.switch_city);
 		refreshWeather = (Button) findViewById(R.id.refresh_weather);
+		rl_weather = (RelativeLayout) findViewById(R.id.rl_weather);
 		switchCity.setOnClickListener(this);
 		refreshWeather.setOnClickListener(this);
 	}
@@ -102,12 +108,22 @@ public class WeatherActivity extends Activity implements OnClickListener {
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.switch_city:
-			Intent intent = new Intent(this, LoadAddressActivity.class);
+			Intent intent = new Intent(this, LoadAddressActivity2.class);
 			intent.putExtra("from_weather_activity", true);
 			startActivity(intent);
 			finish();
 			break;
 		case R.id.refresh_weather:
+			//用户点击刷新
+			RotateAnimation ra=new RotateAnimation(0, 360, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+			ra.setDuration(1000);
+			ra.setRepeatCount(2);
+			//设置动画为匀速运转
+			LinearInterpolator lin = new LinearInterpolator();
+			ra.setInterpolator(lin);
+			
+			ra.setRepeatMode(Animation.RESTART);
+			refreshWeather.startAnimation(ra);
 			publishText.setText("同步中");
 			county = SharedPreferencesUtil.getStringData(this,
 					"county", "");
@@ -119,8 +135,12 @@ public class WeatherActivity extends Activity implements OnClickListener {
 
 	}
 	private Weather weather;
+
+	private RelativeLayout rl_weather;
 	private void queryWeather(String county) {
-		String result = county.substring(0, 2);
+		//String result = county.substring(0, 2);
+		String result = county;
+		System.err.println("城市为=="+county);
 		try {
 			String address=URLBase.BaseUrl+URLEncoder.encode(result, "UTF-8");
 			System.out.println("地址=="+address);
@@ -157,12 +177,13 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		SharedPreferencesUtil.saveStringData(this, "city_name", weather.data.city);
 		SharedPreferencesUtil.saveStringData(this, "temp1", weather.data.forecast.get(0).high);
 		SharedPreferencesUtil.saveStringData(this, "temp2", weather.data.forecast.get(0).low);
-		SharedPreferencesUtil.saveStringData(this, "weather_desp", weather.data.ganmao);
-		SharedPreferencesUtil.saveStringData(this, "publish_time", weather.data.forecast.get(0).type);
+		SharedPreferencesUtil.saveStringData(this, "weather_desp", weather.data.forecast.get(0).type);
+		SharedPreferencesUtil.saveStringData(this, "publish_time", weather.data.forecast.get(0).fengli);
 		SharedPreferencesUtil.saveStringData(this, "current_date", weather.data.forecast.get(0).date);
 	}
 
 	private void showWeather() {
+		
 		cityNameText.setText(SharedPreferencesUtil.getStringData(this,"city_name", ""));
 		temp1Text.setText(SharedPreferencesUtil.getStringData(this,"temp1", ""));
 		temp2Text.setText(SharedPreferencesUtil.getStringData(this,"temp2", ""));
@@ -173,6 +194,34 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		cityNameText.setVisibility(View.VISIBLE);
 		Intent intent = new Intent(this, AutoUpdateService.class);
 		startService(intent);
+		current++;
+		if (SharedPreferencesUtil.getStringData(this,"weather_desp", "").contains("晴")) {
+			if (current%2==0) {
+				rl_weather.setBackgroundResource(R.drawable.qing);
+			}else {
+				rl_weather.setBackgroundResource(R.drawable.duoyun);
+			}
+			
+		}else if (SharedPreferencesUtil.getStringData(this,"weather_desp", "").contains("多云")) {
+			rl_weather.setBackgroundResource(R.drawable.qing1);
+		}else if (SharedPreferencesUtil.getStringData(this,"weather_desp", "").contains("雪")) {
+			rl_weather.setBackgroundResource(R.drawable.yu);
+		}else if (SharedPreferencesUtil.getStringData(this,"weather_desp", "").contains("雾")) {
+			rl_weather.setBackgroundResource(R.drawable.wu);
+		}
+		else if (SharedPreferencesUtil.getStringData(this,"weather_desp", "").contains("阴")) {
+			rl_weather.setBackgroundResource(R.drawable.ying);
+		}
+		else if (SharedPreferencesUtil.getStringData(this,"weather_desp", "").contains("雷")) {
+			rl_weather.setBackgroundResource(R.drawable.lei);
+		}
+		else if (SharedPreferencesUtil.getStringData(this,"weather_desp", "").contains("雨")) {
+			if (current%2==0) {
+				rl_weather.setBackgroundResource(R.drawable.yu1);
+			}else {
+				rl_weather.setBackgroundResource(R.drawable.yu2);
+			}
+		}
 	}
 
 }

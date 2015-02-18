@@ -50,7 +50,8 @@ public class AutoUpdateService extends Service {
 	 */
 	private void updateWeather() {
 		String county = SharedPreferencesUtil.getStringData(this, "county", "");
-		String result = county.substring(0, 2);
+		//String result = county.substring(0, 2);
+		String result = county;
 		try {
 			String address = URLBase.BaseUrl
 					+ URLEncoder.encode(result, "UTF-8");
